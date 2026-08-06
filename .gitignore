@@ -25,40 +25,24 @@ dmypy.json
 *.pyd
 
 # ============================================
-# Environment Variables
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+
+# ============================================
+# Environment
 # ============================================
 .env
 .env.local
 .env.production
 .env.development
 .env.test
-.env.*.local
-*.env
 
 # ============================================
-# Node.js / Frontend
-# ============================================
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# Build outputs
-dist/
-build/
-*.local
-
-# Vite
-.vite/
-vite.config.js.*
-vite.config.ts.*
-
-# ============================================
-# IDE / Editor
+# IDE
 # ============================================
 .vscode/
 .idea/
@@ -67,69 +51,48 @@ vite.config.ts.*
 *~
 .DS_Store
 Thumbs.db
-desktop.ini
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.code-workspace
-
-# ============================================
-# Docker
-# ============================================
-*.pid
-*.pid.lock
-docker-compose.override.yml
-*.dockerignore
-
-# ============================================
-# Database
-# ============================================
-*.db
-*.sqlite
-*.sqlite3
-*.sqlite-journal
-*.db-journal
 
 # ============================================
 # Logs
 # ============================================
 logs/
 *.log
-*.log.*
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # ============================================
-# OS Files
+# Alembic
+# ============================================
+alembic/versions/*.pyc
+alembic/versions/*.pyo
+alembic/__pycache__/
+
+# ============================================
+# Build
+# ============================================
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+*.tar.gz
+
+# ============================================
+# Testing
+# ============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.cover
+
+# ============================================
+# OS
 # ============================================
 .DS_Store
 Thumbs.db
 desktop.ini
-*.dll
-*.exe
-*.tmp
-*.temp
-*.bak
-*.backup
 
 # ============================================
-# Secrets & Certificates
-# ============================================
-*.pem
-*.key
-*.crt
-*.csr
-*.p12
-*.pfx
-secret/
-secrets/
-*.secret
-
-# ============================================
-# Temporary Files
+# Temporary files
 # ============================================
 *.tmp
 *.temp
@@ -137,70 +100,3 @@ secrets/
 *.backup
 *.swp
 *.swo
-*~
-*.cache
-
-# ============================================
-# Alembic (Database Migrations)
-# ============================================
-alembic/versions/*.pyc
-alembic/versions/*.pyo
-alembic/__pycache__/
-
-# ============================================
-# Coverage / Test Reports
-# ============================================
-.coverage
-.coverage.*
-htmlcov/
-.pytest_cache/
-.tox/
-*.cover
-
-# ============================================
-# Package Managers
-# ============================================
-*.egg-info/
-*.dist-info/
-*.egg
-.eggs/
-pip-wheel-metadata/
-share/python-wheels/
-
-# ============================================
-# Deployment
-# ============================================
-deploy/
-*.tar.gz
-*.zip
-*.tgz
-
-# ============================================
-# MyPy / Type Checking
-# ============================================
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyright/
-.pytype/
-
-# ============================================
-# Jupyter Notebooks
-# ============================================
-.ipynb_checkpoints/
-*.ipynb
-
-# ============================================
-# Profiling
-# ============================================
-.prof
-.profraw
-*.gcno
-*.gcda
-
-# ============================================
-# WampServer (if you use it)
-# ============================================
-wamp/
-*.sql
-*.sql.gz

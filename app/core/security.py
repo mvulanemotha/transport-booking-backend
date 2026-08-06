@@ -26,6 +26,10 @@ class SecurityService:
     @staticmethod
     def get_password_hash(password: str) -> str:
         """Hash password"""
+                # ✅ Bcrypt has a 72-byte limit, truncate if needed
+        if len(password.encode('utf-8')) > 72:
+            password = password[:72]
+
         return pwd_context.hash(password)
 
     @staticmethod
@@ -34,7 +38,9 @@ class SecurityService:
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire, "type": "access"})
-        return jwt.encode(to_encode, str(settings.SECRET_KEY.get_secret_value()), algorithm=settings.ALGORITHM)
+
+        # ✅ Use settings.SECRET_KEY directly (it's a string)
+        return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
     @staticmethod
     def create_refresh_token(data: Dict[str, Any]) -> str:
@@ -42,17 +48,18 @@ class SecurityService:
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
-        return jwt.encode(to_encode, str(settings.SECRET_KEY.get_secret_value()), algorithm=settings.ALGORITHM)
+
+        # ✅ Use settings.SECRET_KEY directly (it's a string)
+        return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
 
     @staticmethod
     def decode_token(token: str) -> Dict[str, Any]:
         """Decode JWT token"""
         try:
-            return jwt.decode(
-                token,
-                str(settings.SECRET_KEY.get_secret_value()),
-                algorithms=[settings.ALGORITHM]
-            )
+            # ✅ Use settings.SECRET_KEY directly (it's a string)
+            return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
         except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

@@ -2,11 +2,7 @@ from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, Refre
 from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse
 from app.schemas.role import RoleCreate, RoleUpdate, RoleResponse
 from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse, CustomerListResponse
-from app.schemas.corporate import (
-    CorporateCustomerCreate, CorporateCustomerUpdate, CorporateCustomerResponse,
-    CorporateUserCreate, CorporateUserUpdate, CorporateUserResponse,
-    CorporateInvoiceCreate, CorporateInvoiceUpdate, CorporateInvoiceResponse
-)
+
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate, VehicleResponse, VehicleListResponse
 from app.schemas.driver import DriverCreate, DriverUpdate, DriverResponse, DriverListResponse
 from app.schemas.route import RouteCreate, RouteUpdate, RouteResponse, RouteListResponse
@@ -47,16 +43,7 @@ __all__ = [
     "CustomerUpdate",
     "CustomerResponse",
     "CustomerListResponse",
-    # Corporate
-    "CorporateCustomerCreate",
-    "CorporateCustomerUpdate",
-    "CorporateCustomerResponse",
-    "CorporateUserCreate",
-    "CorporateUserUpdate",
-    "CorporateUserResponse",
-    "CorporateInvoiceCreate",
-    "CorporateInvoiceUpdate",
-    "CorporateInvoiceResponse",
+
     # Vehicle
     "VehicleCreate",
     "VehicleUpdate",

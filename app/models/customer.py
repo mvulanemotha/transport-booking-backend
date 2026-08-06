@@ -33,7 +33,7 @@ class Customer(BaseModel):
     preferred_dropoff = Column(String(255))
     preferences = Column(JSON)
 
-    corporate_id = Column(UUID(as_uuid=True), ForeignKey("corporate_customers.id"), nullable=True)
+    #corporate_id = Column(UUID(as_uuid=True), ForeignKey("corporate_customers.id"), nullable=True)
 
     notes = Column(Text)
     internal_notes = Column(Text)
@@ -46,8 +46,5 @@ class Customer(BaseModel):
     whatsapp_notifications = Column(Boolean, default=True)
 
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    corporate_id = Column(UUID(as_uuid=True), ForeignKey("corporate_customers.id"), nullable=True)
-
 
     bookings = relationship("Booking", back_populates="customer")
-    corporate = relationship("CorporateCustomer", back_populates="customers")

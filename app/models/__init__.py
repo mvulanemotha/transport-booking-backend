@@ -1,13 +1,7 @@
 from app.models.user import User
 from app.models.role import Role
 from app.models.customer import Customer
-from app.models.corporate import (
-    CorporateCustomer,
-    CorporateUser,
-    CorporateBookingAgent,
-    CorporateInvoice,
-    CorporateInvoiceItem
-)
+
 from app.models.vehicle import Vehicle
 from app.models.driver import Driver
 from app.models.route import Route
@@ -23,11 +17,6 @@ __all__ = [
     "User",
     "Role",
     "Customer",
-    "CorporateCustomer",
-    "CorporateUser",
-    "CorporateBookingAgent",
-    "CorporateInvoice",
-    "CorporateInvoiceItem",
     "Vehicle",
     "Driver",
     "Route",
