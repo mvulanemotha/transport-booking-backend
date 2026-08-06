@@ -1,82 +1,66 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: transport_postgres
-    restart: unless-stopped
+    container_name: transport_postgres_dev
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
-      POSTGRES_DB: ${DB_NAME:-transport_db}
+      POSTGRES_USER: mkhululi
+      POSTGRES_PASSWORD: mkhululi24680
+      POSTGRES_DB: transport
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-transport_db}"]
+      test: ["CMD-SHELL", "pg_isready -U mkhululi -d transport"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - transport_network
+    restart: unless-stopped
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: transport_redis
-    restart: unless-stopped
+    container_name: transport_redis_dev
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "6379:6379"
     volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+      - redis_dev_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - transport_network
+    restart: unless-stopped
 
-  # FastAPI Backend
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: transport_backend
-    restart: unless-stopped
+      dockerfile: Dockerfile.dev
+    container_name: transport_backend_dev
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres123}@postgres:5432/${DB_NAME:-transport_db}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-      ALGORITHM: ${ALGORITHM:-HS256}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
-      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost,http://localhost:5173,http://localhost:3000}
-      DEBUG: ${DEBUG:-False}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      APP_NAME: Transport Booking System
-      APP_VERSION: 1.0.0
-      API_V1_PREFIX: /api/v1
+      DATABASE_URL: postgresql+asyncpg://mkhululi:mkhululi24680@${DB_HOST}:5432/transport
+      REDIS_URL: redis://169.58.108.247:6379/0
+      SECRET_KEY: dev-secret-key-12345
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      BACKEND_CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://169.58.108.247
+      DEBUG: "True"
+      LOG_LEVEL: "DEBUG"
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./app:/app/app:ro
+      - ./app:/app/app
       - ./logs:/app/logs
-    networks:
-      - transport_network
-
-networks:
-  transport_network:
-    driver: bridge
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres_dev_data:
+  redis_dev_data:
