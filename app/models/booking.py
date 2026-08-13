@@ -1,9 +1,9 @@
-from sqlalchemy import Column, String, Enum, UUID, ForeignKey, Date, DateTime, func, Text, Numeric, Integer, Boolean, Time
+from sqlalchemy import Column, String, Integer, Enum, UUID, ForeignKey, DateTime, func, Text, Numeric, Boolean, Time, JSON
 from sqlalchemy.orm import relationship
 import uuid
 import enum
 
-from app.core.database import BaseModel
+from app.core.database import Base
 
 
 class BookingStatus(str, enum.Enum):
@@ -30,9 +30,10 @@ class BookingSource(str, enum.Enum):
     API = "api"
 
 
-class Booking(BaseModel):
+class Booking(Base):
     __tablename__ = "bookings"
 
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     reference = Column(String(30), unique=True, nullable=False, index=True)
 
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
@@ -71,8 +72,13 @@ class Booking(BaseModel):
     completed_at = Column(DateTime(timezone=True))
 
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    is_deleted = Column(DateTime(timezone=True), nullable=True)
 
+    # Relationships
     customer = relationship("Customer", back_populates="bookings")
     schedule = relationship("Schedule", back_populates="bookings")
     passengers = relationship("Passenger", back_populates="booking", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="booking")
+    created_by_user = relationship("User", foreign_keys=[created_by])

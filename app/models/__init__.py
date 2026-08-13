@@ -12,6 +12,8 @@ from app.models.payment import Payment
 from app.models.audit_log import AuditLog
 from app.models.notification import Notification
 from app.models.qr_code import QRCode
+from app.models.route import Route
+
 
 __all__ = [
     "User",
@@ -27,4 +29,5 @@ __all__ = [
     "AuditLog",
     "Notification",
     "QRCode",
+    "Route"
 ]

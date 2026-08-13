@@ -2,12 +2,13 @@ from sqlalchemy import Column, String, Integer, Numeric, Boolean, UUID, ForeignK
 from sqlalchemy.orm import relationship
 import uuid
 
-from app.core.database import BaseModel
+from app.core.database import Base
 
 
-class Customer(BaseModel):
+class Customer(Base):
     __tablename__ = "customers"
 
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, unique=True)
     full_name = Column(String(255), nullable=False)
     phone = Column(String(50), unique=True, nullable=False)
@@ -33,8 +34,6 @@ class Customer(BaseModel):
     preferred_dropoff = Column(String(255))
     preferences = Column(JSON)
 
-    #corporate_id = Column(UUID(as_uuid=True), ForeignKey("corporate_customers.id"), nullable=True)
-
     notes = Column(Text)
     internal_notes = Column(Text)
     tags = Column(JSON)
@@ -46,5 +45,8 @@ class Customer(BaseModel):
     whatsapp_notifications = Column(Boolean, default=True)
 
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    is_deleted = Column(DateTime(timezone=True), nullable=True)
 
     bookings = relationship("Booking", back_populates="customer")

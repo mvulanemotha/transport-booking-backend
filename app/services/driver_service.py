@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
@@ -7,6 +8,7 @@ from app.models.driver import Driver, DriverStatus
 from app.models.user import User
 from app.schemas.driver import DriverCreate, DriverUpdate
 
+logger = logging.getLogger(__name__)
 
 class DriverService:
     @staticmethod
@@ -43,6 +45,8 @@ class DriverService:
         db.add(driver)
         await db.commit()
         await db.refresh(driver)
+
+        logger.info(f"✅ Driver created: {driver.full_name} - {driver.license_number}")
 
         return driver
 

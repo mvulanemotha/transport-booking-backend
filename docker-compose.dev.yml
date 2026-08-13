@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD:?error: DB_PASSWORD is required}"
       POSTGRES_DB: "${DB_NAME:?error: DB_NAME is required}"
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:

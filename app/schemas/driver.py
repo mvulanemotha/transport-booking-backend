@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field , UUID4
 from typing import Optional
 from datetime import date, datetime
 from decimal import Decimal
@@ -50,8 +50,8 @@ class DriverUpdate(BaseModel):
 
 
 class DriverResponse(DriverBase):
-    id: str
-    user_id: Optional[str] = None
+    id: UUID4
+    user_id: Optional[UUID4] = None
     is_available: bool
     status: str
     trips_completed: int = 0
@@ -61,7 +61,7 @@ class DriverResponse(DriverBase):
     contract_end: Optional[date] = None
     languages: Optional[str] = None
     specialties: Optional[str] = None
-    created_by: str
+    created_by: UUID4
     created_at: datetime
     updated_at: datetime
 

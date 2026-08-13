@@ -54,3 +54,16 @@ class BookingListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+# ✅ Add this missing class
+class BookingFilters(BaseModel):
+    status: Optional[str] = None
+    source: Optional[str] = None
+    customer_id: Optional[str] = None
+    schedule_id: Optional[str] = None
+    route_id: Optional[str] = None
+    date_from: Optional[datetime] = None
+    date_to: Optional[datetime] = None
+    search: Optional[str] = None
+    page: int = 1
+    page_size: int = 20

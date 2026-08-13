@@ -33,7 +33,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/auth/login", response_model=TokenResponse)
 async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Login user with email and password"""
     # ✅ Eagerly load the role relationship
@@ -65,7 +65,7 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
-@router.post("/register")
+@router.post("/auth/register")
 async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Register a new user"""
     # Check if email exists
@@ -122,7 +122,7 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     }
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post("/auth/refresh", response_model=TokenResponse)
 async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
     """Refresh access token"""
     payload = SecurityService.decode_token(refresh_token)

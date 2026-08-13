@@ -2,12 +2,13 @@ from sqlalchemy import Column, String, UUID, ForeignKey, Date, DateTime, func, T
 from sqlalchemy.orm import relationship
 import uuid
 
-from app.core.database import BaseModel
+from app.core.database import Base
 
 
-class Passenger(BaseModel):
+class Passenger(Base):
     __tablename__ = "passengers"
 
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     booking_id = Column(UUID(as_uuid=True), ForeignKey("bookings.id"), nullable=False)
 
     full_name = Column(String(255), nullable=False)
@@ -24,9 +25,6 @@ class Passenger(BaseModel):
     dropoff_location = Column(String(255))
 
     special_requests = Column(Text)
-    dietary_requirements = Column(Text)
-    medical_requirements = Column(Text)
-
     emergency_contact = Column(String(255))
     emergency_phone = Column(String(50))
 
@@ -39,5 +37,9 @@ class Passenger(BaseModel):
     is_boarded = Column(Boolean, default=False)
     boarded_at = Column(DateTime(timezone=True))
     boarded_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    is_deleted = Column(DateTime(timezone=True), nullable=True)
 
     booking = relationship("Booking", back_populates="passengers")

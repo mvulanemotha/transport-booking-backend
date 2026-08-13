@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field , UUID4
 from typing import Optional
 from datetime import datetime
 from decimal import Decimal
@@ -46,8 +46,8 @@ class RouteUpdate(BaseModel):
 
 
 class RouteResponse(RouteBase):
-    id: str
-    created_by: str
+    id: UUID4  # ✅ Accept UUID, will be serialized to string
+    created_by: UUID4  # ✅ Accept UUID, will be serialized to string
     created_at: datetime
     updated_at: datetime
 

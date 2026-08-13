@@ -1,8 +1,8 @@
-"""Create tables
+"""Initial migration
 
-Revision ID: 5a18cebcf3de
+Revision ID: b4b87803fe7b
 Revises: 
-Create Date: 2026-08-05 17:25:39.169340+00:00
+Create Date: 2026-08-07 18:46:22.604465
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5a18cebcf3de'
+revision: str = 'b4b87803fe7b'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -74,57 +74,49 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_audit_logs_id'), 'audit_logs', ['id'], unique=False)
-    op.create_table('corporate_customers',
-    sa.Column('company_name', sa.String(length=255), nullable=False),
-    sa.Column('registration_number', sa.String(length=100), nullable=True),
-    sa.Column('tax_id', sa.String(length=100), nullable=True),
-    sa.Column('vat_number', sa.String(length=100), nullable=True),
-    sa.Column('contact_person', sa.String(length=255), nullable=False),
+    op.create_table('customers',
+    sa.Column('user_id', sa.UUID(), nullable=True),
+    sa.Column('full_name', sa.String(length=255), nullable=False),
     sa.Column('phone', sa.String(length=50), nullable=False),
-    sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('website', sa.String(length=255), nullable=True),
-    sa.Column('billing_address', sa.Text(), nullable=True),
-    sa.Column('shipping_address', sa.Text(), nullable=True),
-    sa.Column('city', sa.String(length=100), nullable=True),
-    sa.Column('country', sa.String(length=100), nullable=True),
-    sa.Column('postal_code', sa.String(length=20), nullable=True),
-    sa.Column('discount_rate', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('credit_limit', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('credit_used', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('credit_available', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('payment_terms', sa.Integer(), nullable=True),
-    sa.Column('default_payment_method', sa.String(length=50), nullable=True),
-    sa.Column('account_manager_id', sa.UUID(), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('is_verified', sa.Boolean(), nullable=True),
-    sa.Column('verification_date', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('allow_multiple_bookings', sa.Boolean(), nullable=True),
-    sa.Column('allow_self_service', sa.Boolean(), nullable=True),
-    sa.Column('require_approval', sa.Boolean(), nullable=True),
-    sa.Column('custom_pricing', sa.JSON(), nullable=True),
-    sa.Column('subscription_plan', sa.String(length=50), nullable=True),
-    sa.Column('subscription_start', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('subscription_end', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('auto_renew', sa.Boolean(), nullable=True),
-    sa.Column('total_bookings', sa.Integer(), nullable=True),
+    sa.Column('email', sa.String(length=255), nullable=True),
+    sa.Column('id_number', sa.String(length=50), nullable=True),
+    sa.Column('passport_number', sa.String(length=50), nullable=True),
+    sa.Column('nationality', sa.String(length=100), nullable=True),
+    sa.Column('address', sa.Text(), nullable=True),
+    sa.Column('date_of_birth', sa.Date(), nullable=True),
+    sa.Column('gender', sa.String(length=20), nullable=True),
+    sa.Column('membership_plan', sa.String(length=50), nullable=True),
+    sa.Column('membership_start', sa.Date(), nullable=True),
+    sa.Column('membership_expiry', sa.Date(), nullable=True),
+    sa.Column('membership_discount', sa.Numeric(precision=5, scale=2), nullable=True),
+    sa.Column('loyalty_points', sa.Integer(), nullable=True),
+    sa.Column('total_trips', sa.Integer(), nullable=True),
     sa.Column('total_spent', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('average_booking_value', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('last_booking_date', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('average_rating', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('preferred_pickup', sa.String(length=255), nullable=True),
+    sa.Column('preferred_dropoff', sa.String(length=255), nullable=True),
+    sa.Column('preferences', sa.JSON(), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('internal_notes', sa.Text(), nullable=True),
     sa.Column('tags', sa.JSON(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('is_verified', sa.Boolean(), nullable=True),
+    sa.Column('email_notifications', sa.Boolean(), nullable=True),
+    sa.Column('sms_notifications', sa.Boolean(), nullable=True),
+    sa.Column('whatsapp_notifications', sa.Boolean(), nullable=True),
     sa.Column('created_by', sa.UUID(), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['account_manager_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('registration_number')
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('phone'),
+    sa.UniqueConstraint('user_id')
     )
-    op.create_index(op.f('ix_corporate_customers_company_name'), 'corporate_customers', ['company_name'], unique=True)
-    op.create_index(op.f('ix_corporate_customers_id'), 'corporate_customers', ['id'], unique=False)
+    op.create_index(op.f('ix_customers_id'), 'customers', ['id'], unique=False)
     op.create_table('drivers',
     sa.Column('user_id', sa.UUID(), nullable=True),
     sa.Column('full_name', sa.String(length=255), nullable=False),
@@ -166,6 +158,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_drivers_id'), 'drivers', ['id'], unique=False)
     op.create_table('routes',
+    sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('code', sa.String(length=20), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('origin', sa.String(length=255), nullable=False),
@@ -183,7 +176,6 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('created_by', sa.UUID(), nullable=False),
-    sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
@@ -227,135 +219,35 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_vehicles_id'), 'vehicles', ['id'], unique=False)
     op.create_index(op.f('ix_vehicles_registration'), 'vehicles', ['registration'], unique=True)
-    op.create_table('corporate_booking_agents',
-    sa.Column('corporate_id', sa.UUID(), nullable=False),
-    sa.Column('full_name', sa.String(length=255), nullable=False),
-    sa.Column('phone', sa.String(length=50), nullable=True),
-    sa.Column('email', sa.String(length=255), nullable=True),
-    sa.Column('department', sa.String(length=100), nullable=True),
-    sa.Column('job_title', sa.String(length=100), nullable=True),
-    sa.Column('is_primary', sa.Boolean(), nullable=True),
-    sa.Column('can_book', sa.Boolean(), nullable=True),
-    sa.Column('can_cancel', sa.Boolean(), nullable=True),
-    sa.Column('can_modify', sa.Boolean(), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('created_by', sa.UUID(), nullable=False),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['corporate_id'], ['corporate_customers.id'], ),
-    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_corporate_booking_agents_id'), 'corporate_booking_agents', ['id'], unique=False)
-    op.create_table('corporate_invoices',
-    sa.Column('corporate_id', sa.UUID(), nullable=False),
-    sa.Column('invoice_number', sa.String(length=50), nullable=False),
-    sa.Column('invoice_date', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('due_date', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('subtotal', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('tax_amount', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('discount_amount', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('total_amount', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('amount_paid', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('outstanding_balance', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('status', sa.String(length=50), nullable=True),
-    sa.Column('payment_method', sa.String(length=50), nullable=True),
-    sa.Column('payment_date', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('payment_reference', sa.String(length=100), nullable=True),
-    sa.Column('period_start', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('period_end', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('notes', sa.Text(), nullable=True),
-    sa.Column('internal_notes', sa.Text(), nullable=True),
-    sa.Column('created_by', sa.UUID(), nullable=False),
-    sa.Column('sent_by', sa.UUID(), nullable=True),
-    sa.Column('sent_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['corporate_id'], ['corporate_customers.id'], ),
-    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['sent_by'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('invoice_number')
-    )
-    op.create_index(op.f('ix_corporate_invoices_id'), 'corporate_invoices', ['id'], unique=False)
-    op.create_table('corporate_users',
-    sa.Column('corporate_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('role', sa.String(length=50), nullable=True),
-    sa.Column('department', sa.String(length=100), nullable=True),
-    sa.Column('job_title', sa.String(length=100), nullable=True),
-    sa.Column('can_book', sa.Boolean(), nullable=True),
-    sa.Column('can_cancel', sa.Boolean(), nullable=True),
-    sa.Column('can_view_history', sa.Boolean(), nullable=True),
-    sa.Column('can_view_billing', sa.Boolean(), nullable=True),
-    sa.Column('can_manage_users', sa.Boolean(), nullable=True),
-    sa.Column('can_approve_bookings', sa.Boolean(), nullable=True),
-    sa.Column('can_view_reports', sa.Boolean(), nullable=True),
-    sa.Column('approval_limit', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('requires_approval', sa.Boolean(), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('invited_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('accepted_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('created_by', sa.UUID(), nullable=False),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['corporate_id'], ['corporate_customers.id'], ),
-    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_corporate_users_id'), 'corporate_users', ['id'], unique=False)
-    op.create_table('customers',
+    op.create_table('notifications',
     sa.Column('user_id', sa.UUID(), nullable=True),
-    sa.Column('full_name', sa.String(length=255), nullable=False),
-    sa.Column('phone', sa.String(length=50), nullable=False),
-    sa.Column('email', sa.String(length=255), nullable=True),
-    sa.Column('id_number', sa.String(length=50), nullable=True),
-    sa.Column('passport_number', sa.String(length=50), nullable=True),
-    sa.Column('nationality', sa.String(length=100), nullable=True),
-    sa.Column('address', sa.Text(), nullable=True),
-    sa.Column('date_of_birth', sa.Date(), nullable=True),
-    sa.Column('gender', sa.String(length=20), nullable=True),
-    sa.Column('membership_plan', sa.String(length=50), nullable=True),
-    sa.Column('membership_start', sa.Date(), nullable=True),
-    sa.Column('membership_expiry', sa.Date(), nullable=True),
-    sa.Column('membership_discount', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('loyalty_points', sa.Integer(), nullable=True),
-    sa.Column('total_trips', sa.Integer(), nullable=True),
-    sa.Column('total_spent', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('average_rating', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('preferred_pickup', sa.String(length=255), nullable=True),
-    sa.Column('preferred_dropoff', sa.String(length=255), nullable=True),
-    sa.Column('preferences', sa.JSON(), nullable=True),
-    sa.Column('corporate_id', sa.UUID(), nullable=True),
-    sa.Column('notes', sa.Text(), nullable=True),
-    sa.Column('internal_notes', sa.Text(), nullable=True),
-    sa.Column('tags', sa.JSON(), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('is_verified', sa.Boolean(), nullable=True),
-    sa.Column('email_notifications', sa.Boolean(), nullable=True),
-    sa.Column('sms_notifications', sa.Boolean(), nullable=True),
-    sa.Column('whatsapp_notifications', sa.Boolean(), nullable=True),
-    sa.Column('created_by', sa.UUID(), nullable=False),
+    sa.Column('customer_id', sa.UUID(), nullable=True),
+    sa.Column('recipient', sa.String(length=255), nullable=True),
+    sa.Column('type', sa.String(length=50), nullable=False),
+    sa.Column('title', sa.String(length=255), nullable=False),
+    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('data', sa.JSON(), nullable=True),
+    sa.Column('channel', sa.String(length=50), nullable=False),
+    sa.Column('template_id', sa.String(length=100), nullable=True),
+    sa.Column('sent', sa.Boolean(), nullable=True),
+    sa.Column('sent_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('read', sa.Boolean(), nullable=True),
+    sa.Column('read_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('delivery_status', sa.String(length=50), nullable=True),
+    sa.Column('delivery_error', sa.Text(), nullable=True),
+    sa.Column('retry_count', sa.Integer(), nullable=True),
+    sa.Column('scheduled_for', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_by', sa.UUID(), nullable=True),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['corporate_id'], ['corporate_customers.id'], ),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['customer_id'], ['customers.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('phone'),
-    sa.UniqueConstraint('user_id')
+    sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_customers_id'), 'customers', ['id'], unique=False)
+    op.create_index(op.f('ix_notifications_id'), 'notifications', ['id'], unique=False)
     op.create_table('schedules',
     sa.Column('code', sa.String(length=30), nullable=False),
     sa.Column('route_id', sa.UUID(), nullable=False),
@@ -441,56 +333,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_bookings_id'), 'bookings', ['id'], unique=False)
     op.create_index(op.f('ix_bookings_reference'), 'bookings', ['reference'], unique=True)
-    op.create_table('notifications',
-    sa.Column('user_id', sa.UUID(), nullable=True),
-    sa.Column('customer_id', sa.UUID(), nullable=True),
-    sa.Column('recipient', sa.String(length=255), nullable=True),
-    sa.Column('type', sa.String(length=50), nullable=False),
-    sa.Column('title', sa.String(length=255), nullable=False),
-    sa.Column('content', sa.Text(), nullable=False),
-    sa.Column('data', sa.JSON(), nullable=True),
-    sa.Column('channel', sa.String(length=50), nullable=False),
-    sa.Column('template_id', sa.String(length=100), nullable=True),
-    sa.Column('sent', sa.Boolean(), nullable=True),
-    sa.Column('sent_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('read', sa.Boolean(), nullable=True),
-    sa.Column('read_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('delivery_status', sa.String(length=50), nullable=True),
-    sa.Column('delivery_error', sa.Text(), nullable=True),
-    sa.Column('retry_count', sa.Integer(), nullable=True),
-    sa.Column('scheduled_for', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('created_by', sa.UUID(), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['customer_id'], ['customers.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_notifications_id'), 'notifications', ['id'], unique=False)
-    op.create_table('corporate_invoice_items',
-    sa.Column('invoice_id', sa.UUID(), nullable=False),
-    sa.Column('description', sa.String(length=255), nullable=False),
-    sa.Column('quantity', sa.Integer(), nullable=True),
-    sa.Column('unit_price', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('total_price', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('booking_id', sa.UUID(), nullable=True),
-    sa.Column('schedule_id', sa.UUID(), nullable=True),
-    sa.Column('tax_rate', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('tax_amount', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('notes', sa.Text(), nullable=True),
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_deleted', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['booking_id'], ['bookings.id'], ),
-    sa.ForeignKeyConstraint(['invoice_id'], ['corporate_invoices.id'], ),
-    sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_corporate_invoice_items_id'), 'corporate_invoice_items', ['id'], unique=False)
     op.create_table('passengers',
     sa.Column('booking_id', sa.UUID(), nullable=False),
     sa.Column('full_name', sa.String(length=255), nullable=False),
@@ -604,10 +446,6 @@ def downgrade() -> None:
     op.drop_table('payments')
     op.drop_index(op.f('ix_passengers_id'), table_name='passengers')
     op.drop_table('passengers')
-    op.drop_index(op.f('ix_corporate_invoice_items_id'), table_name='corporate_invoice_items')
-    op.drop_table('corporate_invoice_items')
-    op.drop_index(op.f('ix_notifications_id'), table_name='notifications')
-    op.drop_table('notifications')
     op.drop_index(op.f('ix_bookings_reference'), table_name='bookings')
     op.drop_index(op.f('ix_bookings_id'), table_name='bookings')
     op.drop_table('bookings')
@@ -615,14 +453,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_schedules_departure_date'), table_name='schedules')
     op.drop_index(op.f('ix_schedules_code'), table_name='schedules')
     op.drop_table('schedules')
-    op.drop_index(op.f('ix_customers_id'), table_name='customers')
-    op.drop_table('customers')
-    op.drop_index(op.f('ix_corporate_users_id'), table_name='corporate_users')
-    op.drop_table('corporate_users')
-    op.drop_index(op.f('ix_corporate_invoices_id'), table_name='corporate_invoices')
-    op.drop_table('corporate_invoices')
-    op.drop_index(op.f('ix_corporate_booking_agents_id'), table_name='corporate_booking_agents')
-    op.drop_table('corporate_booking_agents')
+    op.drop_index(op.f('ix_notifications_id'), table_name='notifications')
+    op.drop_table('notifications')
     op.drop_index(op.f('ix_vehicles_registration'), table_name='vehicles')
     op.drop_index(op.f('ix_vehicles_id'), table_name='vehicles')
     op.drop_table('vehicles')
@@ -631,9 +463,8 @@ def downgrade() -> None:
     op.drop_table('routes')
     op.drop_index(op.f('ix_drivers_id'), table_name='drivers')
     op.drop_table('drivers')
-    op.drop_index(op.f('ix_corporate_customers_id'), table_name='corporate_customers')
-    op.drop_index(op.f('ix_corporate_customers_company_name'), table_name='corporate_customers')
-    op.drop_table('corporate_customers')
+    op.drop_index(op.f('ix_customers_id'), table_name='customers')
+    op.drop_table('customers')
     op.drop_index(op.f('ix_audit_logs_id'), table_name='audit_logs')
     op.drop_table('audit_logs')
     op.drop_index(op.f('ix_users_phone'), table_name='users')

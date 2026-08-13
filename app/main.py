@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Use relative imports (without "app.")
-from app.api.v1 import auth  # Import the auth router from the auth.py file
-
+from app.api.v1 import auth ,users , routes , vehicles , drivers , schedules # Import the auth router from the auth.py file
+from app.core.config import settings
 app = FastAPI(title="Transport Booking System", version="1.0.0")
 
 # CORS middleware
@@ -14,9 +14,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-#add routes
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 
 
 # Simple routes
@@ -34,7 +31,14 @@ async def ping():
 
 # Include auth routes (if auth.py exists with a router)
 try:
-    app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
-    print("✅ Auth routes loaded")
+    #add routes
+    app.include_router(auth.router, prefix=settings.API_V1_PREFIX, tags=["auth"])
+    app.include_router(users.router , prefix=settings.API_V1_PREFIX, tags=["Users"])
+    app.include_router(routes.router, prefix=settings.API_V1_PREFIX, tags=["Routes"])
+    app.include_router(vehicles.router, prefix=settings.API_V1_PREFIX, tags=["Vehicles"])
+    app.include_router(drivers.router, prefix=settings.API_V1_PREFIX, tags=["Drivers"])
+    app.include_router(schedules.router, prefix=settings.API_V1_PREFIX, tags=["Schedules"])
+
+    print("✅ Routes loaded")
 except Exception as e:
     print(f"⚠️ Auth routes not loaded: {e}")

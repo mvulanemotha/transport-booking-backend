@@ -6,6 +6,7 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 import uuid
 
 from app.core.config import settings
@@ -80,7 +81,10 @@ class SecurityService:
         if not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-        query = select(User).where(User.id == uuid.UUID(user_id))
+        #query = select(User).where(User.id == uuid.UUID(user_id))
+
+        # ✅ Eager load the role
+        query = select(User).where(User.id == uuid.UUID(user_id)).options(selectinload(User.role))
         result = await db.execute(query)
         user = result.scalar_one_or_none()
 

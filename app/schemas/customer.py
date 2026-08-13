@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, UUID4
 from typing import Optional
 from datetime import date, datetime
 from decimal import Decimal
@@ -38,8 +38,8 @@ class CustomerUpdate(BaseModel):
 
 
 class CustomerResponse(CustomerBase):
-    id: str
-    user_id: Optional[str] = None
+    id: UUID4
+    user_id: Optional[UUID4] = None
     membership_start: Optional[date] = None
     membership_expiry: Optional[date] = None
     loyalty_points: int = 0
@@ -48,7 +48,7 @@ class CustomerResponse(CustomerBase):
     average_rating: Optional[Decimal] = None
     is_active: bool
     is_verified: bool
-    created_by: str
+    created_by: UUID4
     created_at: datetime
     updated_at: datetime
 
