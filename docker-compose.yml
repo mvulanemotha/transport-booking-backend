@@ -5,15 +5,15 @@ services:
     image: postgres:15-alpine
     container_name: transport_postgres_dev
     environment:
-      POSTGRES_USER: mkhululi
-      POSTGRES_PASSWORD: mkhululi24680
-      POSTGRES_DB: transport
+      POSTGRES_USER: "${DB_USER:?error: DB_USER is required}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?error: DB_PASSWORD is required}"
+      POSTGRES_DB: "${DB_NAME:?error: DB_NAME is required}"
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mkhululi -d transport"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,7 +23,7 @@ services:
     image: redis:7-alpine
     container_name: transport_redis_dev
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_dev_data:/data
     healthcheck:
@@ -39,17 +39,17 @@ services:
       dockerfile: Dockerfile.dev
     container_name: transport_backend_dev
     environment:
-      DATABASE_URL: postgresql+asyncpg://mkhululi:mkhululi24680@${DB_HOST}:5432/transport
-      REDIS_URL: redis://169.58.108.247:6379/0
-      SECRET_KEY: dev-secret-key-12345
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
-      REFRESH_TOKEN_EXPIRE_DAYS: "7"
-      BACKEND_CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://169.58.108.247
-      DEBUG: "True"
-      LOG_LEVEL: "DEBUG"
+      DATABASE_URL: "${DATABASE_URL:?error: DATABASE_URL is required}"
+      REDIS_URL: "${REDIS_URL:?error: REDIS_URL is required}"
+      SECRET_KEY: "${SECRET_KEY:?error: SECRET_KEY is required}"
+      ALGORITHM: "${ALGORITHM:-HS256}"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE_MINUTES:-60}"
+      REFRESH_TOKEN_EXPIRE_DAYS: "${REFRESH_TOKEN_EXPIRE_DAYS:-7}"
+      BACKEND_CORS_ORIGINS: "${BACKEND_CORS_ORIGINS:?error: BACKEND_CORS_ORIGINS is required}"
+      DEBUG: "${DEBUG:-True}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
