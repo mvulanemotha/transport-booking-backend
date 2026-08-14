@@ -12,6 +12,8 @@ from app.services.manifest_service import ManifestService
 from app.services.notification_service import NotificationService
 from app.services.qr_service import QRService
 from app.services.report_service import ReportService
+from app.services.passenger_service import PassengerService
+
 
 __all__ = [
     "AuthService",
@@ -28,4 +30,5 @@ __all__ = [
     "NotificationService",
     "QRService",
     "ReportService",
+    "PassengerService"
 ]
