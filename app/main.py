@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Use relative imports (without "app.")
-from app.api.v1 import auth ,users ,routes , vehicles , drivers , schedules, customers , bookings # Import the auth router from the auth.py file
+from app.api.v1 import auth ,users ,routes , vehicles , drivers , schedules, customers , bookings, passengers # Import the auth router from the auth.py file
 from app.core.config import settings
 app = FastAPI(title="Transport Booking System", version="1.0.0")
 
@@ -40,6 +40,8 @@ try:
     app.include_router(schedules.router, prefix=settings.API_V1_PREFIX, tags=["Schedules"])
     app.include_router(customers.router, prefix=settings.API_V1_PREFIX, tags=["Customers"])
     app.include_router(bookings.router, prefix=settings.API_V1_PREFIX, tags=["Bookings"])
+    app.include_router(passengers.router , prefix=settings.API_V1_PREFIX, tags=["Passangers"])
+
 
     print("✅ Routes loaded")
 except Exception as e:

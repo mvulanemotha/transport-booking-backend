@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, UUID4
 from typing import Optional
 from datetime import date, datetime
 from decimal import Decimal
@@ -56,11 +56,11 @@ class VehicleUpdate(BaseModel):
 
 
 class VehicleResponse(VehicleBase):
-    id: str
+    id: UUID4  # ✅ Fixed
     status: str
     last_maintenance: Optional[date] = None
     next_maintenance: Optional[date] = None
-    created_by: str
+    created_by: UUID4  # ✅ Fixed
     created_at: datetime
     updated_at: datetime
 

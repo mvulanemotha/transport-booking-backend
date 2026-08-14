@@ -50,3 +50,12 @@ class PassengerResponse(PassengerBase):
 
     class Config:
         from_attributes = True
+
+
+# ✅ This class was missing
+class PassengerListResponse(BaseModel):
+    items: list[PassengerResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
