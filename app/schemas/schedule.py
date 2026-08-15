@@ -4,6 +4,24 @@ from datetime import date, time, datetime
 from decimal import Decimal
 
 
+# --- New nested schemas (lightweight) ---
+class RouteInfo(BaseModel):
+    id: UUID4
+    origin: str
+    destination: str
+    # add other fields if needed (e.g., code, name)
+
+class VehicleInfo(BaseModel):
+    id: UUID4
+    registration: str
+    name: Optional[str] = None
+    # optionally include capacity, type, etc.
+
+class DriverInfo(BaseModel):
+    id: UUID4
+    full_name: str
+    # optionally include phone, email, etc.
+
 class ScheduleBase(BaseModel):
     route_id: UUID4
     departure_location: str = Field(..., min_length=2, max_length=255)
@@ -53,6 +71,11 @@ class ScheduleResponse(ScheduleBase):
     created_by: UUID4
     created_at: datetime
     updated_at: datetime
+
+    # --- New nested fields (optional, populated when loaded) ---
+    route: Optional[RouteInfo] = None
+    vehicle: Optional[VehicleInfo] = None
+    driver: Optional[DriverInfo] = None
 
     class Config:
         from_attributes = True

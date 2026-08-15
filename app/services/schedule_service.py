@@ -9,7 +9,10 @@ from app.models.schedule import Schedule, ScheduleStatus
 from app.models.vehicle import Vehicle, VehicleStatus
 from app.models.driver import Driver, DriverStatus
 from app.models.route import Route
-from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
+from app.schemas.schedule import ScheduleResponse, ScheduleCreate, ScheduleUpdate
+
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -124,12 +127,21 @@ class ScheduleService:
         db: AsyncSession,
         filters: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Get schedules with filters"""
+        """Get schedules with filters, returning enriched data with route, vehicle, and driver details."""
         try:
-            query = select(Schedule).where(Schedule.is_deleted.is_(None))
+            # Base query with eager loading of relationships
+            query = select(Schedule).options(
+                selectinload(Schedule.route),    # relationship name: 'route'
+                selectinload(Schedule.vehicle),  # relationship name: 'vehicle'
+                selectinload(Schedule.driver)    # relationship name: 'driver'
+            )
 
             conditions = []
 
+            # Optional: filter out soft-deleted schedules if your model has is_deleted
+            # conditions.append(Schedule.is_deleted.is_(None))
+
+            # Apply filters
             if filters.get("status"):
                 conditions.append(Schedule.status == filters["status"])
             if filters.get("route_id"):
@@ -153,11 +165,14 @@ class ScheduleService:
             if conditions:
                 query = query.where(and_(*conditions))
 
-            total_result = await db.execute(
-                select(func.count()).select_from(Schedule).where(and_(*conditions) if conditions else Schedule.is_deleted.is_(None))
-            )
+            # Count total records (respecting filters)
+            count_query = select(func.count()).select_from(Schedule)
+            if conditions:
+                count_query = count_query.where(and_(*conditions))
+            total_result = await db.execute(count_query)
             total = total_result.scalar()
 
+            # Pagination
             page = filters.get("page", 1)
             page_size = filters.get("page_size", 20)
             offset = (page - 1) * page_size
@@ -167,13 +182,22 @@ class ScheduleService:
             result = await db.execute(query)
             schedules = result.scalars().all()
 
+            # Convert each ORM schedule to a Pydantic response model.
+            # Because we used selectinload, the nested objects are already loaded.
+            items = [
+                ScheduleResponse.model_validate(schedule, from_attributes=True)
+                for schedule in schedules
+            ]
+
+            # Return the paginated response as a dict (or you could return the Pydantic model directly)
             return {
-                "items": schedules,
+                "items": items,
                 "total": total,
                 "page": page,
                 "page_size": page_size,
                 "total_pages": (total + page_size - 1) // page_size
             }
+
         except Exception as e:
             logger.error(f"Error getting schedules: {str(e)}")
             return {"items": [], "total": 0, "page": 1, "page_size": 20, "total_pages": 0}
