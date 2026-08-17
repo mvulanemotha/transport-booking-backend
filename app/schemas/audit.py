@@ -1,23 +1,26 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 from typing import Optional, Dict, Any
 from datetime import datetime
 
 
-class AuditLogResponse(BaseModel):
-    id: str
-    user_id: Optional[str] = None
+class AuditLogBase(BaseModel):
+    user_id: Optional[UUID4] = None
     user_name: Optional[str] = None
     user_role: Optional[str] = None
     action: str
     table_name: str
-    record_id: str
-    old_values: Optional[Dict[str, Any]] = None
-    new_values: Optional[Dict[str, Any]] = None
+    record_id: Optional[str] = None
     changes: Optional[Dict[str, Any]] = None
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
-    request_id: Optional[str] = None
-    reason: Optional[str] = None
+
+
+class AuditLogCreate(AuditLogBase):
+    pass
+
+
+class AuditLogResponse(AuditLogBase):
+    id: UUID4
     created_at: datetime
 
     class Config:

@@ -1,25 +1,29 @@
-from sqlalchemy import Column, String, JSON, UUID, ForeignKey, DateTime, func, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, DateTime, JSON, Text, Index
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from app.core.database import Base
 import uuid
 
-from app.core.database import BaseModel
 
-
-class AuditLog(BaseModel):
+class AuditLog(Base):
     __tablename__ = "audit_logs"
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    user_name = Column(String(255))
-    user_role = Column(String(50))
-    action = Column(String(50), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=True)  # null for system actions
+    user_name = Column(String(255), nullable=True)
+    user_role = Column(String(50), nullable=True)
+    action = Column(String(50), nullable=False)  # CREATE, UPDATE, DELETE, LOGIN, etc.
     table_name = Column(String(100), nullable=False)
-    record_id = Column(UUID(as_uuid=True), nullable=False)
-    old_values = Column(JSON)
-    new_values = Column(JSON)
-    ip_address = Column(String(50))
-    user_agent = Column(String(500))
-    request_id = Column(String(100))
-    changes = Column(JSON)
-    reason = Column(String(500))
+    record_id = Column(String(255), nullable=True)  # could be UUID or string
+    changes = Column(JSON, nullable=True)  # { field: { from: old, to: new } }
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User", foreign_keys=[user_id])
+    # Indexes for performance
+    __table_args__ = (
+        Index("idx_audit_user_id", "user_id"),
+        Index("idx_audit_action", "action"),
+        Index("idx_audit_table_name", "table_name"),
+        Index("idx_audit_created_at", "created_at"),
+    )
