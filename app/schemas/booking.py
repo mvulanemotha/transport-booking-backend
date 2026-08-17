@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field ,UUID4
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
@@ -8,13 +8,12 @@ from app.schemas.passenger import PassengerCreate, PassengerResponse
 
 class BookingBase(BaseModel):
     schedule_id: str
-    customer_id: str
+    customer_id: Optional[str] = None   # ← make optional
     number_of_passengers: int = Field(1, ge=1, le=20)
     source: Optional[str] = "website"
     pickup_location: Optional[str] = None
     dropoff_location: Optional[str] = None
     notes: Optional[str] = None
-
 
 class BookingCreate(BookingBase):
     passengers: List[PassengerCreate]
@@ -29,10 +28,12 @@ class BookingUpdate(BaseModel):
 
 
 class BookingResponse(BookingBase):
-    id: str
+    id: UUID4
     reference: str
-    vehicle_id: str
-    route_id: str
+    vehicle_id: UUID4
+    route_id: UUID4
+    schedule_id: UUID4
+    customer_id: UUID4
     booking_date: datetime
     number_of_seats: int
     total_amount: Decimal
@@ -40,7 +41,7 @@ class BookingResponse(BookingBase):
     outstanding_balance: Decimal
     status: str
     passengers: List[PassengerResponse] = []
-    created_by: str
+    created_by: UUID4
     created_at: datetime
     updated_at: datetime
 

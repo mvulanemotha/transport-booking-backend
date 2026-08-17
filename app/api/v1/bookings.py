@@ -13,29 +13,64 @@ from app.schemas.booking import BookingCreate, BookingUpdate, BookingResponse, B
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-
 @router.post("/bookings", response_model=BookingResponse)
 async def create_booking(
     booking_data: BookingCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(SecurityService.get_current_user)
 ):
-    """Create a new booking"""
+    # Resolve customer_id based on role
+    is_admin = current_user.role.name in ["super_admin", "admin"]
+
+    if is_admin:
+        if not booking_data.customer_id:
+            raise HTTPException(400, "customer_id required for admin")
+        effective_customer_id = booking_data.customer_id
+    else:
+        # Customer must have a customer profile
+        if not current_user.customer:
+            raise HTTPException(400, "No customer profile found for this user. Please contact support.")
+        effective_customer_id = str(current_user.customer.id)
+        # Security: if they provided a customer_id, ensure it matches
+        if booking_data.customer_id and booking_data.customer_id != effective_customer_id:
+            raise HTTPException(403, "Cannot book for another customer")
+
+    # Override customer_id
+    booking_dict = booking_data.model_dump(exclude_unset=True)
+    booking_dict["customer_id"] = effective_customer_id
+    updated_data = BookingCreate(**booking_dict)
+
     try:
-        booking = await BookingService.create_booking(db, booking_data, str(current_user.id))
-        logger.info(f"Booking created: {booking.reference} by {current_user.email}")
+        booking = await BookingService.create_booking(db, updated_data, str(current_user.id))
         return booking
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(400, detail=str(e))
     except Exception as e:
         logger.error(f"Error creating booking: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create booking: {str(e)}"
-        )
+        raise HTTPException(500, "Failed to create booking")
+
+#@router.post("/bookings", response_model=BookingResponse)
+#async def create_booking(
+#    booking_data: BookingCreate,
+#    db: AsyncSession = Depends(get_db),
+#    current_user: User = Depends(SecurityService.get_current_user)
+#):
+#    """Create a new booking"""
+#    try:
+#        booking = await BookingService.create_booking(db, booking_data, str(current_user.id))
+#        logger.info(f"Booking created: {booking.reference} by {current_user.email}")
+#        return booking
+#    except ValueError as e:
+#        raise HTTPException(
+#            status_code=status.HTTP_400_BAD_REQUEST,
+#            detail=str(e)
+#        )
+#    except Exception as e:
+#        logger.error(f"Error creating booking: {str(e)}")
+#        raise HTTPException(
+#            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#            detail=f"Failed to create booking: {str(e)}"
+#        )
 
 
 @router.get("/bookings", response_model=BookingListResponse)

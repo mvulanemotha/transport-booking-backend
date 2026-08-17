@@ -84,8 +84,19 @@ class SecurityService:
         #query = select(User).where(User.id == uuid.UUID(user_id))
 
         # ✅ Eager load the role
-        query = select(User).where(User.id == uuid.UUID(user_id)).options(selectinload(User.role))
-        result = await db.execute(query)
+        #query = select(User).where(User.id == uuid.UUID(user_id)).options(selectinload(User.role))
+
+        #result = await db.execute(query)
+        # ... decode token to get user_id ...
+
+        result = await db.execute(
+            select(User)
+            .options(
+                selectinload(User.role),
+                selectinload(User.customer)   # ✅ load customer relationship
+            )
+            .where(User.id == uuid.UUID(user_id))
+        )
         user = result.scalar_one_or_none()
 
         if not user:

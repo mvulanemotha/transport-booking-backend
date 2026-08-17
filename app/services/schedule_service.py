@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
+from sqlalchemy.orm import selectinload
 from datetime import datetime, date, time
 import uuid
 
@@ -91,6 +92,19 @@ class ScheduleService:
             db.add(schedule)
             await db.commit()
             await db.refresh(schedule)
+
+            # ✅ Eagerly load relationships for the response
+            result = await db.execute(
+                select(Schedule)
+                .options(
+                    selectinload(Schedule.route),
+                    selectinload(Schedule.vehicle),
+                    selectinload(Schedule.driver)
+                )
+                .where(Schedule.id == schedule.id)
+            )
+
+            schedule = result.scalar_one()
 
             logger.info(f"✅ Schedule created: {schedule.code}")
             return schedule

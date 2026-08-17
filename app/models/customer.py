@@ -50,3 +50,4 @@ class Customer(Base):
     is_deleted = Column(DateTime(timezone=True), nullable=True)
 
     bookings = relationship("Booking", back_populates="customer")
+    user = relationship("User", back_populates="customer", foreign_keys=[user_id])

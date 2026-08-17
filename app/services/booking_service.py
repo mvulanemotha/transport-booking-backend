@@ -1,7 +1,8 @@
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
+from sqlalchemy.orm import selectinload
 from datetime import datetime, date
 import uuid
 
@@ -9,19 +10,20 @@ from app.models.booking import Booking, BookingStatus, BookingSource
 from app.models.passenger import Passenger
 from app.models.schedule import Schedule
 from app.models.customer import Customer
-from app.schemas.booking import BookingCreate, BookingUpdate
+from app.schemas.booking import BookingCreate, BookingUpdate, BookingResponse
 
 logger = logging.getLogger(__name__)
 
 
 class BookingService:
+
     @staticmethod
     async def create_booking(
         db: AsyncSession,
         booking_data: BookingCreate,
         user_id: str
     ) -> Booking:
-        """Create a new booking"""
+        """Create a new booking."""
         try:
             # Get schedule and check availability
             schedule = await db.execute(
@@ -100,15 +102,25 @@ class BookingService:
             # Update schedule seats
             schedule.booked_seats += booking_data.number_of_passengers
             schedule.available_seats = schedule.capacity - schedule.booked_seats
-
-            # Update schedule status if fully booked
             if schedule.available_seats == 0:
                 schedule.status = "fully_booked"
 
             await db.commit()
             await db.refresh(booking)
 
-            logger.info(f"✅ Booking created: {booking.reference} - {booking.number_of_passengers} passengers")
+            # ✅ Reload with only the relationships that exist on the Booking model
+            #    (customer and passengers) – avoid vehicle, route, schedule.
+            result = await db.execute(
+                select(Booking)
+                .options(
+                    selectinload(Booking.customer),   # exists
+                    selectinload(Booking.passengers)  # exists
+                )
+                .where(Booking.id == booking.id)
+            )
+            booking = result.scalar_one()
+
+            logger.info(f"✅ Booking created: {booking.reference}")
             return booking
 
         except ValueError as e:
@@ -124,9 +136,12 @@ class BookingService:
         db: AsyncSession,
         booking_id: str
     ) -> Optional[Booking]:
-        """Get booking by ID"""
+        """Get booking by ID with relationships loaded."""
         try:
-            query = select(Booking).where(
+            query = select(Booking).options(
+                selectinload(Booking.customer),
+                selectinload(Booking.passengers)
+            ).where(
                 and_(
                     Booking.id == uuid.UUID(booking_id),
                     Booking.is_deleted.is_(None)
@@ -143,9 +158,13 @@ class BookingService:
         db: AsyncSession,
         reference: str
     ) -> Optional[Booking]:
-        """Get booking by reference"""
+        """Get booking by reference with relationships loaded."""
         try:
-            query = select(Booking).where(
+            query = select(Booking).options(
+                selectinload(Booking.customer),
+
+                selectinload(Booking.passengers)
+            ).where(
                 and_(
                     Booking.reference == reference,
                     Booking.is_deleted.is_(None)
@@ -162,9 +181,13 @@ class BookingService:
         db: AsyncSession,
         filters: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Get bookings with filters"""
+        """Get bookings with filters, return serialised response objects."""
         try:
-            query = select(Booking).where(Booking.is_deleted.is_(None))
+            # ✅ Base query with eager loading
+            query = select(Booking).options(
+                selectinload(Booking.customer),
+                selectinload(Booking.passengers)
+            ).where(Booking.is_deleted.is_(None))
 
             conditions = []
 
@@ -195,27 +218,36 @@ class BookingService:
             if conditions:
                 query = query.where(and_(*conditions))
 
-            total_result = await db.execute(
-                select(func.count()).select_from(Booking).where(and_(*conditions) if conditions else Booking.is_deleted.is_(None))
-            )
+            # Count
+            count_query = select(func.count()).select_from(Booking)
+            if conditions:
+                count_query = count_query.where(and_(*conditions))
+            total_result = await db.execute(count_query)
             total = total_result.scalar()
 
+            # Pagination
             page = filters.get("page", 1)
             page_size = filters.get("page_size", 20)
             offset = (page - 1) * page_size
-            query = query.offset(offset).limit(page_size)
-            query = query.order_by(Booking.created_at.desc())
+            query = query.offset(offset).limit(page_size).order_by(Booking.created_at.desc())
 
             result = await db.execute(query)
             bookings = result.scalars().all()
 
+            # ✅ Convert to Pydantic models to serialise UUIDs to strings
+            items = [
+                BookingResponse.model_validate(booking, from_attributes=True)
+                for booking in bookings
+            ]
+
             return {
-                "items": bookings,
+                "items": items,
                 "total": total,
                 "page": page,
                 "page_size": page_size,
                 "total_pages": (total + page_size - 1) // page_size
             }
+
         except Exception as e:
             logger.error(f"Error getting bookings: {str(e)}")
             return {"items": [], "total": 0, "page": 1, "page_size": 20, "total_pages": 0}
@@ -227,7 +259,7 @@ class BookingService:
         booking_data: BookingUpdate,
         user_id: str
     ) -> Optional[Booking]:
-        """Update booking"""
+        """Update booking and return with relationships loaded."""
         try:
             booking = await BookingService.get_booking(db, booking_id)
             if not booking:
@@ -247,7 +279,20 @@ class BookingService:
             await db.commit()
             await db.refresh(booking)
 
+            # ✅ Reload relationships (in case they were not loaded)
+            result = await db.execute(
+                select(Booking).options(
+                    selectinload(Booking.customer),
+                    selectinload(Booking.schedule),
+                    selectinload(Booking.vehicle),
+                    selectinload(Booking.route),
+                    selectinload(Booking.passengers)
+                ).where(Booking.id == booking.id)
+            )
+            booking = result.scalar_one()
+
             return booking
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Error updating booking {booking_id}: {str(e)}")
@@ -260,7 +305,7 @@ class BookingService:
         reason: str,
         user_id: str
     ) -> Optional[Booking]:
-        """Cancel booking"""
+        """Cancel booking and return with relationships loaded."""
         try:
             booking = await BookingService.get_booking(db, booking_id)
             if not booking:
@@ -288,8 +333,18 @@ class BookingService:
             await db.commit()
             await db.refresh(booking)
 
+            # ✅ Reload relationships (optional but consistent)
+            result = await db.execute(
+                select(Booking).options(
+                    selectinload(Booking.customer),
+                    selectinload(Booking.passengers)
+                ).where(Booking.id == booking.id)
+            )
+            booking = result.scalar_one()
+
             logger.info(f"✅ Booking cancelled: {booking.reference}")
             return booking
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Error cancelling booking {booking_id}: {str(e)}")

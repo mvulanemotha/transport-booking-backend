@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+
 @router.post("/customers", response_model=CustomerResponse)
 async def create_customer(
     customer_data: CustomerCreate,
@@ -21,7 +22,10 @@ async def create_customer(
 ):
     """Create a new customer"""
     try:
-        customer = await CustomerService.create_customer(db, customer_data, str(current_user.id))
+        #customer = await CustomerService.create_customer(db, customer_data, str(current_user.id))
+        customer = await CustomerService.get_or_create_customer(
+            db, customer_data, str(current_user.id)
+        )
         logger.info(f"Customer created: {customer.full_name} by {current_user.email}")
         return customer
     except ValueError as e:

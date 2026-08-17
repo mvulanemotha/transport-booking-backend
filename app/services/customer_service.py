@@ -153,3 +153,86 @@ class CustomerService:
         except Exception as e:
             logger.error(f"Error searching customers: {str(e)}")
             return []
+
+
+    @staticmethod
+    async def get_or_create_customer(
+        db: AsyncSession,
+        customer_data: CustomerCreate,
+        user_id: str
+    ) -> Customer:
+        """Retrieve an existing customer by email or phone, or create a new one if not found"""
+        try:
+            # Check if customer exists by phone
+            conditions = []
+            if customer_data.email:
+                conditions.append(Customer.email == customer_data.email)
+            if customer_data.phone:
+                conditions.append(Customer.phone == customer_data.phone)
+
+
+            if conditions:
+                # check for existing customer
+
+                query = select(Customer).where(
+                    and_(
+                        or_(*conditions),
+                        Customer.is_deleted.is_(None)
+                    )
+                )
+
+                result = await db.execute(query)
+                existing = result.scalar_one_or_none()
+
+                if existing:
+                    logger.info(f"✅ Existing customer found: {existing.full_name} - {existing.phone}")
+
+                    return existing
+
+            # No match – create new customer
+            # Validate that at least phone or email is present
+
+            if not customer_data.phone and not customer_data.email:
+                raise ValueError("At least phone or email is required")
+
+
+            # Delegate to existing create_customer logic (which checks phone uniqueness again, but we already checked)
+            # To avoid duplication, we can directly create, but we must handle potential race conditions.
+            # Better to use the same logic as create_customer but without the pre-check (since we already did).
+            # We'll call the existing create_customer method, but it will raise ValueError if phone exists.
+            # Since we already checked, it shouldn't happen, but we'll catch and fallback.
+
+            try:
+                customer = await CustomerService.create_customer(db , customer_data, user_id)
+                return customer
+            except ValueError as e:
+                            # If a race condition caused a duplicate, fetch the existing one again and return it
+                await db.rollback()
+                logger.warning(f"Race condition while creating customer: {str(e)}")
+
+            # Re-fetch
+            conditions = []
+
+            if customer_data.email:
+                conditions.append(Customer.email == customer_data.email)
+            if customer_data.phone:
+                conditions.append(Customer.phone == customer_data.phone)
+
+            query = select(Customer).where(
+                and_(
+                    or_(*conditions),
+                    Customer.is_deleted.is_(None)
+                )
+            )
+
+            result = await db.execute(query)
+            existing = result.scalar_one_or_none()
+
+            if existing:
+                return existing
+            else:
+                raise  # re-raise if still not found
+
+        except Exception as e:
+            logger.error(f"Error in get_or_create_customer: {str(e)}")
+            raise Exception(f"Failed to get or create customer: {str(e)}")

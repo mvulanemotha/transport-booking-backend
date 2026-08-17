@@ -19,3 +19,9 @@ class User(BaseModel):
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False)
 
     role = relationship("Role", back_populates="users")
+    customer = relationship(
+        "Customer",
+        back_populates="user",
+        uselist=False,
+        foreign_keys="[Customer.user_id]"  # explicitly tells SQLAlchemy to use user_id
+    )
